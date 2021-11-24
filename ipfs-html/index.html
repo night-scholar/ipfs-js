@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1">
+  <title>ipfs-http-client</title>
+</head>
+
+<body style="display: flex;align-items: center;justify-content: center;height:100vh">
+  <section>
+    <div class="ipfs-info">
+      <h1>IPFS JS 测试 demo</h1>
+      <img class="ipfs-logo" alt="IPFS logo" src="./logo.svg" width="240" />
+      <h2 class="status"></h2>
+      <h4 class="id"> </h4>
+      <h4 class="agentVersion"></h4>
+      <br>
+    </div>
+    <div class="add-box">
+      <h2>上传文件</h2>
+      <input type="file" class="add"><br>
+      <a class="hash-link" href=""></a>
+    </div>
+  </section>
+  <!-- 引入ipfs依赖 -->
+  <script src="https://cdn.jsdelivr.net/npm/ipfs/dist/index.min.js"></script>
+  <script type="text/javascript">
+  //DOM
+  let addDOM = document.getElementsByClassName('add-box')[0];
+  let inputAddDOM = document.getElementsByClassName('add')[0];
+  let hashLinkDOM = document.getElementsByClassName('hash-link')[0];
+  let ipfsInfoDOM = document.getElementsByClassName('ipfs-info')[0];
+  let statusDOM = document.getElementsByClassName('status')[0];
+  let idDOM = document.getElementsByClassName('id')[0];
+  let agentVersionDOM = document.getElementsByClassName('agentVersion')[0];
+
+  (async function(){
+    // 连接ipfs 一定要注意这里是Ipfs 不是IPFS
+    let ipfs = await window.Ipfs.create()
+    getIpfsNodeInfo();
+
+    // 获取节点信息
+    async function getIpfsNodeInfo() {
+      try {
+        const {id, agentVersion} = await ipfs.id();
+        statusDOM.innerHTML = '已经连接到 IPFS';
+        idDOM.innerHTML = 'ID: ' + id;
+        agentVersionDOM.innerHTML = 'Agent version: ' + agentVersion;
+      } catch (err) {
+        // Set error status text.
+        statusDOM.innerHTML = `报错: ${err}`;
+      }
+      ipfsInfoDOM.style.display = 'block';
+    }
+
+    // 上传文件操作
+    inputAddDOM.onchange = (event) => {
+      // 获得上传的文件
+      let file = event.target.files[0]
+
+      // 执行上传函数
+      saveToIpfs(file).then(hashCode => {
+        /*
+         * 上传后的文件连接可以为
+         * https://ipfs.io/ipfs/+hashCode
+         * 也可以为你的服务器的上传地址
+         */
+        hashLinkDOM.href = "https://ipfs.io/ipfs/" + hashCode;
+        hashLinkDOM.innerHTML = "文件哈希值为：" + hashCode;
+      })
+    }
+
+    // 上传文件到ipfs的方法
+    async function saveToIpfs(file) {
+      try {
+        const added = await ipfs.add(file, {
+          progress: (prog) => console.log(`received: ${prog}`),
+        });
+
+        // 获取上传文件hash值
+        let added_file_hash = added.cid.toString();
+
+        // 返回hash值
+        return Promise.resolve(added_file_hash)
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+  })()
+  </script>
+</body>
+
+</html>

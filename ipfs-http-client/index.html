@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1">
+  <title>ipfs-http-client</title>
+</head>
+
+<body style="display: flex;align-items: center;justify-content: center;height:100vh">
+  <section>
+    <h1>ipfs-http-client JS 测试 demo</h1>
+    <div class="connect-box">
+      <h2>填写你的服务器链接</h2>
+      <input type="text" class="connect" value="/ip4/127.0.0.1/tcp/5001">
+      <button class="connect-btn">连接ipfs</button>
+    </div>
+
+    <div class="ipfs-info" style="display: none">
+      <img class="ipfs-logo" alt="IPFS logo" src="./logo.svg" width="240" />
+      <h2 class="status"></h2>
+      <h4 class="id"> </h4>
+      <h4 class="agentVersion"></h4>
+      <br>
+    </div>
+
+    <div class="add-box" style="display: none;">
+      <h2>上传文件</h2>
+      <input type="file" class="add"><br>
+      <a class="hash-link" href=""></a>
+    </div>
+  </section>
+
+  <!-- 引入ipfs-http-client依赖 -->
+  <script src="https://cdn.jsdelivr.net/npm/ipfs-http-client/dist/index.min.js"></script>
+
+  <script type="text/javascript">
+    //DOM
+    let connectDOM = document.getElementsByClassName('connect-box')[0];
+    let inputConnectDOM = document.getElementsByClassName('connect')[0];
+    let btnConnectDOM = document.getElementsByClassName('connect-btn')[0];
+    let addDOM = document.getElementsByClassName('add-box')[0];
+    let inputAddDOM = document.getElementsByClassName('add')[0];
+    let hashLinkDOM = document.getElementsByClassName('hash-link')[0];
+    let ipfsInfoDOM = document.getElementsByClassName('ipfs-info')[0];
+    let statusDOM = document.getElementsByClassName('status')[0];
+    let idDOM = document.getElementsByClassName('id')[0];
+    let agentVersionDOM = document.getElementsByClassName('agentVersion')[0];
+
+
+    let ipfs = null;
+
+    // 连接ipfs
+    btnConnectDOM.onclick = () => {
+      /*
+       *inputConnectDOM.value 为ipfs连接的服务器网址
+       * 可以为字符串如：/ip4/ip地址/tcp/端口号
+       * 也可以为对象如：
+       * {
+       * 	host:'192.168.33.11',//ip地址
+       * 	port:'5001',//端口号
+       * 	protocol: 'http', //协议名
+       *  	apiPath: '/ipfs/api/v0' //路径，默认为此，也可为设为其他
+       * }
+       */
+      ipfs = window.IpfsHttpClient(inputConnectDOM.value);
+      console.log(ipfs)
+
+      // 连接成功之后显示可操作内容
+      getIpfsNodeInfo();
+      addDOM.style.display = 'block';
+      connectDOM.style.display = 'none';
+    }
+
+
+    // 获取节点信息
+    async function getIpfsNodeInfo() {
+      try {
+        const {
+          agentVersion,
+          id
+        } = await ipfs.id();
+        statusDOM.innerHTML = '已经连接到 IPFS';
+        idDOM.innerHTML = 'ID: ' + id;
+        agentVersionDOM.innerHTML = 'Agent version: ' + agentVersion;
+      } catch (err) {
+        // Set error status text.
+        statusDOM.innerHTML = `报错: ${err}`;
+      }
+      ipfsInfoDOM.style.display = 'block';
+    }
+
+    // 上传文件操作
+    inputAddDOM.onchange = (event) => {
+      // 获得上传的文件
+      let file = event.target.files[0]
+
+      // 执行上传函数
+      saveToIpfs(file).then(hashCode => {
+        /*
+         * 上传后的文件链接地址可以为
+         * https://ipfs.io/ipfs/+hashCode
+         * 也可以为你的服务器的上传地址
+         */
+        hashLinkDOM.href = "https://ipfs.io/ipfs/" + hashCode;
+        hashLinkDOM.innerHTML = "文件哈希值为：" + hashCode;
+      })
+    }
+
+    // 上传文件到ipfs的方法
+    async function saveToIpfs(file) {
+      try {
+        const added = await ipfs.add(file, {
+          progress: (prog) => console.log(`received: ${prog}`),
+        });
+
+        // 获取上传文件hash值
+        let added_file_hash = added.cid.toString();
+
+        // 返回hash值
+        return Promise.resolve(added_file_hash)
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+
+</html>
