@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
+    "ipfs-api": "^26.1.2",
     "ipfs-http-client": "^48.0.0",
     "vue": "^2.6.11"
   },

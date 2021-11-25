@@ -63,7 +63,7 @@
        *  	apiPath: '/ipfs/api/v0' //路径，默认为此，也可为设为其他
        * }
        */
-      ipfs = window.IpfsHttpClient(inputConnectDOM.value);
+      ipfs = window.IpfsHttpClient.create(inputConnectDOM.value);
       console.log(ipfs)
 
       // 连接成功之后显示可操作内容
